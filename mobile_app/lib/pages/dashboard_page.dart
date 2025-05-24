@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login_page.dart';
 import 'vehicle_page.dart';
 import 'users_page.dart';
-import 'dart:convert';
+import 'demandes_intervention_page.dart';
+import 'rapports_intervention_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -177,6 +180,32 @@ class _DashboardPageState extends State<DashboardPage> {
               Icons.build,
               () {
                 // TODO: Implémenter la navigation vers la page des maintenances
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildActionButton(
+              context,
+              'Demandes d\'Intervention',
+              Icons.assignment,
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const DemandesInterventionPage()),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildActionButton(
+              context,
+              'Rapports d\'Intervention',
+              Icons.description,
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const RapportsInterventionPage()),
+                );
               },
             ),
           ],
