@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model vehicule {
+  code_vehicule                 String                         @id
+  code_type                     Int
+  code_genre                    String
+  unite_predication             String
+  n_immatriculation             String
+  n_serie                       String
+  date_acquisition              DateTime?
+  prix_acquisition              Float?
+  n_inventaire                  String?
+  date_debut_assurance          DateTime?
+  date_fin_assurance            DateTime?
+  date_debut_controle_technique DateTime?
+  date_fin_controle_technique   DateTime?
+  date_debut_atmd               DateTime?
+  date_fin_atmd                 DateTime?
+  date_debut_permis_circuler    DateTime?
+  date_fin_permis_circuler      DateTime?
+  date_debut_certificat         DateTime?
+  date_fin_certificat           DateTime?
+  affectations                  affectation[]
+  demande_intervention          demande_intervention[]
+  kilo_heure                    historique_kilometrage_heure[]
+  historique_status             historique_status[]
+  immobilisations               immobilisation[]
+  FK_vehicule_REF_genre         genre                          @relation(fields: [code_genre], references: [code_genre])
+  FK_vehicule_REF_type          type                           @relation(fields: [code_type], references: [id_type])
+}
+
+model marque {
+  id_marque   Int    @id @default(autoincrement())
+  designation String
+  types       type[]
+}
+
+model type {
+  id_type             Int                   @id @default(autoincrement())
+  designation         String
+  id_marque           Int
+  progammes_entretien programme_entretien[]
+  FK_type_REF_marque  marque                @relation(fields: [id_marque], references: [id_marque])
+  vehicules           vehicule[]
+}
+
+model genre {
+  code_genre  String     @id
+  designation String
+  vehicules   vehicule[]
+}
+
+model status {
+  code_status       String              @id
+  designation       String
+  historique_status historique_status[]
+}
+
+model historique_status {
+  code_vehicule String
+  code_status   String
+  date          DateTime
+  status        status   @relation(fields: [code_status], references: [code_status])
+  vehicule      vehicule @relation(fields: [code_vehicule], references: [code_vehicule])
+
+  @@id([code_vehicule, code_status, date])
+}
+
+model structure {
+  code_structure             String        @id
+  code_structure_hierachique String?
+  designation                String
+  type_structure_hierachique String
+  affectations               affectation[]
+  parent                     structure?    @relation("StructureHierarchy", fields: [code_structure_hierachique], references: [code_structure], onDelete: NoAction, onUpdate: NoAction, map: "structure_structure_parent_fkey")
+  children                   structure[]   @relation("StructureHierarchy")
+  utilisateurs               utilisateur[]
+}
+
+model historique_kilometrage_heure {
+  code_vehicule                      String
+  date                               DateTime
+  kilo_parcouru_heure_fonctionnement Float
+  code_veh                           vehicule @relation(fields: [code_vehicule], references: [code_vehicule])
+
+  @@id([code_vehicule, date])
+}
+
+model immobilisation {
+  code_vehicule        String
+  date_immobilisation  DateTime
+  cause_immobilisation String
+  lieu                 String
+  action               String
+  echeance             DateTime?
+  vehicule             vehicule  @relation(fields: [code_vehicule], references: [code_vehicule])
+
+  @@id([code_vehicule, date_immobilisation])
+}
+
+model affectation {
+  code_vehicule  String
+  code_structure String
+  date           DateTime
+  structure      structure @relation(fields: [code_structure], references: [code_structure], onUpdate: NoAction)
+  vehicule       vehicule  @relation(fields: [code_vehicule], references: [code_vehicule])
+
+  @@id([code_vehicule, code_structure, date])
+}
+
+model utilisateur {
+  id_utilisateur     Int             @id @default(autoincrement())
+  nom_utilisateur    String
+  prenom_utilisateur String
+  username           String          @unique
+  email              String
+  numero_telephone   String
+  mot_de_passe       String
+  code_structure     String
+  methode_authent    String
+  est_admin          Boolean
+  droit_utilisateur  String
+  role               String
+
+  structure          structure       @relation(fields: [code_structure], references: [code_structure], onDelete: Cascade)
+}
+
+model gamme {
+  code_gamme   String                @id
+  designation  String
+  unite_mesure String
+  programmes   programme_entretien[]
+}
+
+model operation {
+  code_operation String                @id
+  designation    String
+  programmes     programme_entretien[]
+}
+
+model programme_entretien {
+  code_gamme     String
+  code_operation String
+  code_type      Int
+  periode        Int
+  gamme          gamme     @relation(fields: [code_gamme], references: [code_gamme])
+  operation      operation @relation(fields: [code_operation], references: [code_operation])
+  type           type      @relation(fields: [code_type], references: [id_type])
+
+  @@id([code_type, code_gamme, code_operation])
+}
+
+model demande_intervention {
+  id_demande_intervention    Int               @id @default(autoincrement())
+  numero_demande             String                @default("")
+  etat_demande               String
+  date_application           DateTime
+  date_heure_panne           String
+  structure_maintenance      String
+  activite                   String                @default("material roulant")
+  nature_panne               String
+  nature_travaux             String
+  degre_urgence              String
+  code_vehicule              String?
+  district_id                String
+  centre_id                  String
+  constat_panne              String?
+  diagnostique               String?
+  description                String?
+  niveaux_prio               Int?
+  necess_permis              Boolean?
+  routinier                  Boolean?
+  routinier_ref              String?
+  dangereux                  Boolean?
+  dangereux_ref              String?
+  nom_prenom_demandeur       String?
+  fonction_demandeur         String?
+  date_demandeur             DateTime
+  nom_prenom_intervevant     String?
+  fonction_intervevant       String?
+  date_intervevant           DateTime?
+  nom_prenom_responsable     String?
+  date_responsable           String?
+  fonction_responsable       String?
+  date_responsable_unm       String?
+  fonction_responsable_unm   String?
+  nom_prenom_responsable_unm String?
+  date_hse                   String?
+  fonction_hse               String?
+  nom_prenom_hse             String?
+  vehicule                   vehicule?             @relation(fields: [code_vehicule], references: [code_vehicule] , onDelete: SetNull)
+  rapport_intervention       rapport_intervention?
+}
+model rapport_intervention {
+  id_rapport_intervention                     String               @id
+  id_demande_intervention                     Int              @unique
+  structure_maintenance_en_charge_des_travaux String
+  district_id                                 String
+  centre_id                                   String
+  numero_OR                                   String
+  date_application                            DateTime
+  date_debut_travaux                          String
+  date_fin_travaux                            String
+  date_panne                                  DateTime
+  date_prise_charge                           String
+  duree_travaux                               String
+  description_essais                          String
+  essais                                      String
+  reservation                                 String?
+  cout_total_traveaux_interne                 Int
+  cout_total_traveaux_externe                 Int
+  reference_documentée                       String
+  date_fin_permis                             String
+  date_utilisateur                            DateTime
+  nom_prenom_demandeur                        String
+  date_demandeur                              String
+  nom_prenom_responsable                      String
+  date_responsable                            String
+  nom_prenom_utilisateur                      String
+  demande_intervention                        demande_intervention @relation(fields: [id_demande_intervention], references: [id_demande_intervention])
+  traveaux_externe                            traveaux_externe[]
+  traveaux_interne                            traveaux_interne[]
+}
+
+model traveaux_interne {
+  id_travaille        Int                  @id @default(autoincrement())
+  id_rapport          String
+  atelier_desc        String
+  temps_alloue        Int
+  PDR_consommee       String
+  cout_pdr            Int
+  reference_bc_bm_btm String
+  description         String?              @db.NVarChar(255)
+  rapport             rapport_intervention @relation(fields: [id_rapport], references: [id_rapport_intervention], onDelete: Cascade)
+}
+
+model traveaux_externe {
+  id_travaille       Int                  @id @default(autoincrement())
+  id_rapport         String
+  design_prestataire String
+  reference_contrat  String
+  reference_facture  String
+  cout_facture       Int
+  description        String?              @db.NVarChar(255)
+  rapport            rapport_intervention @relation(fields: [id_rapport], references: [id_rapport_intervention], onDelete: Cascade)
+}
